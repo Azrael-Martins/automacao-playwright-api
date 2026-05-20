@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Projeto de Automação Irisys
 
 ## Objetivo
@@ -81,6 +81,5 @@ AUTOMATIONWEB/
 └── README.md                    # Documentação do projeto
 ```
         
-=======
-# qa-automation-playwright
->>>>>>> 96be549c39ef2991391db69632f66f1e9f1b7859
+
+
