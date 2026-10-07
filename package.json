@@ -1,0 +1,18 @@
+{
+  "name": "api-automation-local",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automação de API local — Playwright (não versionado no GitHub)",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
+}
