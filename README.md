@@ -1,8 +1,8 @@
-# Automação de API — Playwright (local)
+# Automação de API — Playwright
 
-Projeto **somente na máquina** (`local/api-automation/`). A pasta `local/` costuma estar no `.gitignore` do repositório principal — não vai para o GitHub.
+Repositório: [automacao-playwright-api](https://github.com/Azrael-Martins/automacao-playwright-api) (privado) — branch padrão: `automacao-playwright-api`.
 
-Automação de API com **Playwright Test**, **Page Object Model (POM)** em **JavaScript (CommonJS)** e um único arquivo **`.env`** na raiz.
+Automação de API com **Playwright Test**, **Page Object Model (POM)** em **JavaScript (CommonJS)** e um único arquivo **`.env`** na raiz (não versionado).
 
 API sob teste: [ServeRest](https://serverest.dev/?lang=pt-BR) — documentação interativa em [Swagger](https://serverest.dev/swagger.json).
 
