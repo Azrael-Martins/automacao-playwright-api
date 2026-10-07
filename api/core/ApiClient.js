@@ -1,14 +1,12 @@
-const { apiKey } = require('../config/environment');
+const { apiKey } = require('../../config/environment');
 
-// Base dos Page Objects de API: monta path relativo e delega ao request do Playwright
-class BasePage {
+// Cliente HTTP base: monta path relativo e delega ao request do Playwright
+class ApiClient {
   constructor(request, resourcePath = '') {
-    // request = fixture HTTP do Playwright (já usa baseURL do playwright.config)
     this.request = request;
     this.resourcePath = resourcePath.replace(/^\/+|\/+$/g, '');
   }
 
-  // Path sem "/" no início — assim o Playwright anexa ao baseURL corretamente
   _url(path = '') {
     if (!path) {
       return this.resourcePath;
@@ -23,7 +21,6 @@ class BasePage {
       'Content-Type': 'application/json',
       ...extra,
     };
-    // Futuro: token do POST /login (hoje os testes de /usuarios não precisam)
     if (apiKey) {
       headers.Authorization = `Bearer ${apiKey}`;
     }
@@ -66,4 +63,4 @@ class BasePage {
   }
 }
 
-module.exports = { BasePage };
+module.exports = { ApiClient };

@@ -2,7 +2,7 @@
 
 Repositório: [automacao-playwright-api](https://github.com/Azrael-Martins/automacao-playwright-api) (público) — branch padrão: `automacao-playwright-api`.
 
-Automação de API com **Playwright Test**, **Page Object Model (POM)** em **JavaScript (CommonJS)** e um único arquivo **`.env`** na raiz (não versionado).
+Automação de API com **Playwright Test**, camada **`api/`** (cliente HTTP + endpoints), **fixtures** e **JavaScript (CommonJS)**. Variáveis em **`.env`** na raiz (não versionado); use **`.env.example`** como modelo.
 
 API sob teste: [ServeRest](https://serverest.dev/?lang=pt-BR) — documentação interativa em [Swagger](https://serverest.dev/swagger.json).
 
@@ -16,7 +16,7 @@ API sob teste: [ServeRest](https://serverest.dev/?lang=pt-BR) — documentação
 - [Configuração — arquivo `.env`](#configuração--arquivo-env)
 - [Como uma chamada HTTP funciona aqui](#como-uma-chamada-http-funciona-aqui)
 - [Estrutura de pastas](#estrutura-de-pastas)
-- [Page Object Model na prática](#page-object-model-na-prática)
+- [Camada API na prática](#camada-api-na-prática)
 - [Testes que existem hoje](#testes-que-existem-hoje)
 - [Como criar um novo teste](#como-criar-um-novo-teste)
 - [Comandos úteis](#comandos-úteis)
@@ -30,8 +30,9 @@ API sob teste: [ServeRest](https://serverest.dev/?lang=pt-BR) — documentação
 Este repositório serve para **estudar automação de API** com boas práticas:
 
 - Testes em `tests/` — só **orquestram** e **validam** resultados.
-- Endpoints e verbos HTTP ficam em `pages/` (Page Objects).
-- Dados de teste ficam em `data/` e `data/builders/`.
+- Chamadas HTTP ficam em `api/endpoints/` (classes por recurso).
+- Transporte comum (verbos, headers, paths) em `api/core/ApiClient.js`.
+- Dados de teste em `api/data/` e `api/data/builders/`.
 
 Você não precisa abrir o Postman para cada teste: o Playwright envia as requisições por código.
 
@@ -45,23 +46,23 @@ Você não precisa abrir o Postman para cada teste: o Playwright envia as requis
 | **Endpoint** | Caminho do recurso, ex.: `/usuarios`. |
 | **Verbo HTTP** | **GET** (ler), **POST** (criar), **PUT** (atualizar), **DELETE** (excluir). |
 | **baseURL** | Host da API no `.env`; o Playwright concatena com o path (`usuarios`). |
-| **`request`** | Cliente HTTP do Playwright; aparece no teste como `async ({ request })`. |
+| **`request`** | Cliente HTTP do Playwright; usado por `ApiClient`. |
+| **`usuariosApi`** | Fixture Playwright: instância pronta de `UsuariosApi`. |
 | **Payload** | Corpo JSON enviado no POST/PUT (ex.: dados do usuário). |
-| **Page Object** | Classe que encapsula um recurso da API (`UsuariosPage` → `/usuarios`). |
 | **Spec** | Arquivo de teste (`*.spec.js`). |
 
 ---
 
 ## Primeiro uso (passo a passo)
 
-1. Abra o terminal na pasta `local/api-automation/`.
+1. Abra o terminal na pasta do projeto (`api-automation/`).
 2. Instale dependências:
 
    ```bash
    npm install
    ```
 
-3. Crie o arquivo `.env` na raiz (copie o bloco da seção [Configuração](#configuração--arquivo-env)).
+3. Crie o arquivo `.env` na raiz (copie de [`.env.example`](.env.example) ou da seção [Configuração](#configuração--arquivo-env)).
 4. Rode os testes (é necessário **internet** — a API é pública):
 
    ```bash
@@ -78,7 +79,7 @@ Você não precisa abrir o Postman para cada teste: o Playwright envia as requis
 
 ## Configuração — arquivo `.env`
 
-O `.env` **não vai para o Git**. Crie um na raiz do projeto:
+O `.env` **não vai para o Git**. Modelo versionado: [`.env.example`](.env.example).
 
 ```env
 API_BASE_URL=https://serverest.dev
@@ -110,61 +111,67 @@ config/environment.js  →  lê variáveis
     ↓
 playwright.config.js   →  baseURL: https://serverest.dev/
     ↓
-teste: async ({ request })   →  Playwright cria o cliente HTTP
+fixtures/api.fixture.js  →  usuariosApi (UsuariosApi + request)
     ↓
-new UsuariosPage(request)
-    ↓
-usuariosPage.create(payload)   →  basePage faz request.post('usuarios', { data })
+usuariosApi.create(payload)  →  ApiClient.post → request HTTP
     ↓
 URL final: https://serverest.dev/usuarios
 ```
 
-A **barra final** em `baseURL` no `playwright.config.js` é importante: paths relativos como `usuarios` viram `.../usuarios` e não `.../usuarios` perdendo o `/api` (em APIs com prefixo).
+A **barra final** em `baseURL` no `playwright.config.js` é importante: paths relativos como `usuarios` viram `.../usuarios` corretamente.
 
 **Onde cada peça mora:**
 
 | Peça | Onde |
 |------|------|
 | Host | `.env` → `playwright.config.js` (`baseURL`) |
-| Path do recurso | `pages/usuariosPage.js` (`'usuarios'`) + `basePage._url()` |
-| Cliente HTTP | Fixture `request` do Playwright |
-| Corpo JSON | `data/builders/usuarioBuilder.js` → `create({ data: payload })` |
+| Path do recurso | `api/endpoints/UsuariosApi.js` (`'usuarios'`) + `ApiClient._url()` |
+| Cliente HTTP | Fixture `request` do Playwright, encapsulado em `ApiClient` |
+| Corpo JSON | `api/data/builders/usuario.builder.js` → `create({ data: payload })` |
 
 ---
 
 ## Estrutura de pastas
 
 ```text
-local/api-automation/
+api-automation/
 ├── .env                      # Suas variáveis locais (não versionado)
+├── .env.example              # Modelo de variáveis
 ├── .gitignore
 ├── README.md
-├── package.json              # Scripts npm e dependências
-├── playwright.config.js      # baseURL, timeout, pasta de testes
+├── package.json
+├── playwright.config.js
+├── api/
+│   ├── core/
+│   │   └── ApiClient.js      # GET, POST, DELETE… (comum a todos os recursos)
+│   ├── endpoints/
+│   │   └── UsuariosApi.js    # Métodos do recurso /usuarios
+│   └── data/
+│       ├── usuarios.data.js  # Dados fixos (ex.: id inexistente)
+│       └── builders/
+│           └── usuario.builder.js
 ├── config/
-│   └── environment.js        # Carrega .env e exporta apiBaseUrl, etc.
-├── pages/
-│   ├── basePage.js           # GET, POST, DELETE… (comum a todos os recursos)
-│   └── usuariosPage.js       # Métodos do recurso /usuarios
-├── data/
-│   ├── usuarios.data.js      # Dados fixos (ex.: id inexistente)
-│   └── builders/
-│       └── usuarioBuilder.js # Gera usuário com email único
+│   └── environment.js
+├── fixtures/
+│   └── api.fixture.js        # test.extend com usuariosApi
 ├── helpers/
-│   └── responseAssertions.js # Valida status + JSON
+│   └── responseAssertions.js
 └── tests/
     └── api/
-        └── usuarios.spec.js  # Testes POST, GET, DELETE
+        └── usuarios/
+            ├── criar-usuario.spec.js
+            ├── consultar-usuario.spec.js
+            └── excluir-usuario.spec.js
 ```
 
 ---
 
-## Page Object Model na prática
+## Camada API na prática
 
-**Regra:** o spec **não** monta URL nem chama `request.get` direto. Ele usa métodos com nome de negócio.
+**Regra:** o spec **não** monta URL nem chama `request.get` direto. Usa a fixture `usuariosApi` e métodos com nome de negócio.
 
-| Swagger (ServeRest) | Método no `UsuariosPage` | Verbo HTTP |
-|---------------------|--------------------------|------------|
+| Swagger (ServeRest) | Método no `UsuariosApi` | Verbo HTTP |
+|---------------------|-------------------------|------------|
 | `GET /usuarios` | `list()` | GET |
 | `GET /usuarios/{_id}` | `getById(id)` | GET |
 | `POST /usuarios` | `create(payload)` | POST |
@@ -174,12 +181,10 @@ local/api-automation/
 Exemplo mínimo no spec:
 
 ```javascript
-const { test, expect } = require('@playwright/test');
-const { UsuariosPage } = require('../../pages/usuariosPage');
+const { test, expect } = require('../../../fixtures/api.fixture');
 
-test('exemplo', async ({ request }) => {
-  const usuariosPage = new UsuariosPage(request);
-  const response = await usuariosPage.list();
+test('exemplo', async ({ usuariosApi }) => {
+  const response = await usuariosApi.list();
   expect(response.status()).toBe(200);
 });
 ```
@@ -188,13 +193,13 @@ test('exemplo', async ({ request }) => {
 
 ## Testes que existem hoje
 
-Arquivo: [`tests/api/usuarios.spec.js`](tests/api/usuarios.spec.js)
+Pasta: [`tests/api/usuarios/`](tests/api/usuarios/)
 
-| Teste | O que faz | Status esperado |
-|-------|-----------|-----------------|
-| POST /usuarios cadastra usuário | `buildUsuario()` + `create()` | 201 |
-| GET /usuarios lista usuários | `list()` | 200, `quantidade` e `usuarios[]` |
-| DELETE /usuarios/{_id} | `create()` depois `remove(_id)` | 200 na exclusão |
+| Arquivo | O que faz | Status esperado |
+|---------|-----------|-----------------|
+| `criar-usuario.spec.js` | `buildUsuario()` + `create()` | 201 |
+| `consultar-usuario.spec.js` | `list()` | 200, `quantidade` e `usuarios[]` |
+| `excluir-usuario.spec.js` | `create()` depois `remove(_id)` | 200 na exclusão |
 
 Helper usado: [`helpers/responseAssertions.js`](helpers/responseAssertions.js) — confere status HTTP e `Content-Type` JSON antes de devolver o body.
 
@@ -203,17 +208,18 @@ Helper usado: [`helpers/responseAssertions.js`](helpers/responseAssertions.js) �
 ## Como criar um novo teste
 
 1. **Swagger** — Confira método, path, body e respostas em [serverest.dev](https://serverest.dev/swagger.json).
-2. **Page Object** — Se o recurso é novo, crie `pages/produtosPage.js` (copie o padrão de `usuariosPage.js`). Se é o mesmo recurso, adicione um método em `usuariosPage.js`.
-3. **Dados** — Use `buildUsuario()` ou crie constantes em `data/`.
-4. **Spec** — Novo `test('...', async ({ request }) => { ... })` em `usuarios.spec.js` ou novo arquivo em `tests/api/*.spec.js`.
-5. **Validar** — `npm test`.
+2. **Endpoint** — Novo recurso: crie `api/endpoints/NovoRecursoApi.js` (copie o padrão de `UsuariosApi.js`). Mesmo recurso: adicione método na classe existente.
+3. **Fixture** — Registre a nova API em `fixtures/api.fixture.js` se quiser injeção automática.
+4. **Dados** — Use `buildUsuario()` ou constantes em `api/data/`.
+5. **Spec** — Novo arquivo em `tests/api/<recurso>/<acao>.spec.js`; importe `test` de `fixtures/api.fixture.js`.
+6. **Validar** — `npm test`.
 
 **Exercício sugerido:** teste `GET /usuarios/{_id}` após um `create`, usando `getById(created._id)` e validando `email` do payload.
 
 **Evite:**
 
 - URL completa hardcoded no spec (`https://serverest.dev/...`).
-- Lógica de montagem de path HTTP no spec (deixe no Page Object).
+- Lógica de montagem de path HTTP no spec (deixe em `ApiClient` / `*Api`).
 
 ---
 
@@ -230,19 +236,11 @@ npm run report        # Abre relatório HTML (rode npm test antes)
 
 | Sintoma | Causa provável | O que fazer |
 |---------|----------------|-------------|
-| `API_BASE_URL deve estar definida` | Sem `.env` ou variável vazia | Criar `.env` na raiz do projeto |
+| `API_BASE_URL deve estar definida` | Sem `.env` ou variável vazia | Copie `.env.example` para `.env` |
 | Status 404 em tudo | `baseURL` ou path errado | Confira `.env` e se `playwright.config` usa ``${apiBaseUrl}/`` |
 | Testes lentos ou timeout | Rede ou API fora | Aumente `API_TIMEOUT_MS` no `.env` |
 | `npm run report` vazio | Não rodou testes antes | Execute `npm test` primeiro |
 | Email já utilizado (400) | Mesmo email em execuções paralelas | Use `buildUsuario()` (email único) |
-
----
-
-## Próximos passos
-
-1. Page Object de **login** (`POST /login`) e uso de `API_KEY` / header `Authorization` para rotas de admin.
-2. Recurso **produtos** ou **carrinhos** com novos arquivos em `pages/`.
-3. Cenários negativos (email duplicado, id inexistente — ServeRest retorna **400** em vários casos, não 404).
 
 ---
 

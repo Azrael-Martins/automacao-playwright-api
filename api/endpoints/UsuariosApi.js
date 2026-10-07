@@ -1,13 +1,13 @@
-const { BasePage } = require('./basePage');
+const { ApiClient } = require('../core/ApiClient');
 
-// Page Object do recurso ServeRest: /usuarios (ver Swagger)
-class UsuariosPage extends BasePage {
+// Endpoint ServeRest: /usuarios (ver Swagger)
+class UsuariosApi extends ApiClient {
   constructor(request) {
     super(request, 'usuarios');
   }
 
   async list() {
-    return this.get(); // GET /usuarios
+    return this.get();
   }
 
   async getById(id) {
@@ -15,7 +15,6 @@ class UsuariosPage extends BasePage {
   }
 
   async create(payload) {
-    // { data } serializa o objeto como JSON no corpo da requisição
     return this.post('', { data: payload });
   }
 
@@ -28,4 +27,4 @@ class UsuariosPage extends BasePage {
   }
 }
 
-module.exports = { UsuariosPage };
+module.exports = { UsuariosApi };

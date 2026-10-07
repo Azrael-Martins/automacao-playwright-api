@@ -4,6 +4,7 @@ node_modules/
 # Ambiente (um único .env na raiz — ver README.md)
 .env
 .env.*
+!.env.example
 .env.local
 .env.*.local
 

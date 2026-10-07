@@ -1,4 +1,4 @@
-// Dados fixos para testes; o spec atual usa o builder para emails únicos
+// Dados fixos para testes; specs usam o builder para emails únicos
 const usuarioBase = {
   nome: 'Usuario Teste',
   email: 'usuario.teste@qa.com.br',
