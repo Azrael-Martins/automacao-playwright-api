@@ -2,7 +2,7 @@
   "name": "api-automation-local",
   "version": "1.0.0",
   "private": true,
-  "description": "Automação de API com Playwright — repositório automacao-playwright-api (GitHub privado)",
+  "description": "Automação de API com Playwright — repositório automacao-playwright-api (GitHub público)",
   "scripts": {
     "test": "playwright test",
     "report": "playwright show-report"

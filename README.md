@@ -1,6 +1,6 @@
 # Automação de API — Playwright
 
-Repositório: [automacao-playwright-api](https://github.com/Azrael-Martins/automacao-playwright-api) (privado) — branch padrão: `automacao-playwright-api`.
+Repositório: [automacao-playwright-api](https://github.com/Azrael-Martins/automacao-playwright-api) (público) — branch padrão: `automacao-playwright-api`.
 
 Automação de API com **Playwright Test**, **Page Object Model (POM)** em **JavaScript (CommonJS)** e um único arquivo **`.env`** na raiz (não versionado).
 
