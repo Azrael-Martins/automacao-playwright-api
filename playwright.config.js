@@ -1,6 +1,7 @@
 // @ts-check
 
-const { defineConfig, devices } = require('@playwright/test');
+const { defineConfig } = require('@playwright/test');
+const { API_BASE_URL } = require('./config/environment');
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -19,16 +20,14 @@ module.exports = defineConfig({
     ],
   ],
   use: {
-    baseURL: 'https://www.saucedemo.com',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'api',
+      testMatch: /tests\/api\/.*\.spec\.js/,
       use: {
-        ...devices['Desktop Chrome'],
+        baseURL: API_BASE_URL,
       },
     },
   ],

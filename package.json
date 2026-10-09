@@ -1,10 +1,10 @@
 {
   "name": "automationweb",
   "version": "1.0.0",
-  "description": "Testes de login do SauceDemo com Playwright",
+  "description": "Automação API com Playwright",
   "scripts": {
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
+    "test": "playwright test --project=api",
+    "test:api": "playwright test --project=api",
     "report": "playwright show-report"
   },
   "keywords": [],
@@ -19,3 +19,4 @@
     "dotenv": "^17.4.2"
   }
 }
+

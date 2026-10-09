@@ -15,12 +15,9 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
+    - name: Run Playwright API tests
       env:
-        LOGIN_USERNAME: standard_user
-        LOGIN_PASSWORD: secret_sauce
+        API_BASE_URL: https://jsonplaceholder.typicode.com
       run: npm test
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
